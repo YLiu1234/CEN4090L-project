@@ -10,14 +10,22 @@ public class Player : MonoBehaviour
     private Rigidbody2D playerRB;
     public Animator playerAnimator;
     private BoxCollider2D playerCollider;
-    
 
+    public int side; 
     [Header("Movement Variables")]
     //[SerializeField] private float movementAcceleration = 80f;
     [SerializeField] private float maxMoveSpeed = 25f;
     //[SerializeField] private float groundLinearDrag = 7f;
     private float xInput;
     private int direction = 1;
+   
+    [Header("Climb")]
+    public float distance;
+    public LayerMask whatIsLadder;
+    private bool isClimbing;
+    private float inputHorizontal; 
+    private float inputVertical;
+    private float climbSpeed = 30f;
 
     [Header("Jump Variables")]
     [SerializeField] private float jumpForce = 30f;
@@ -58,16 +66,14 @@ public class Player : MonoBehaviour
     
     private void Update()
     {
-        
         flip();
-        playerRB.velocity = new Vector2(xInput * maxMoveSpeed, playerRB.velocity.y);       
     }
     private void FixedUpdate()
     {
-        
+
         //playerRB.AddForce(new Vector2(horizontalDirection, 0f) * movementAcceleration);
         //playerAnimator.SetFloat("Speed", Mathf.Abs(horizontalDirection));
-        
+
 
         //if (Mathf.Abs(horizontalDirection) < 0.4f)
         //    playerRB.drag = groundLinearDrag;
@@ -132,9 +138,38 @@ public class Player : MonoBehaviour
         }
         if (context.canceled && playerRB.velocity.y > 0f)
         {
-            playerRB.velocity = new Vector2(playerRB.velocity.x, playerRB.velocity.y * 0.5f);
+            playerRB.velocity = new Vector2(playerRB.velocity.x, playerRB.velocity.y * .05f);
             playerAnimator.SetBool("IsJumping", true);
         }
         
+ 
+    }
+
+    public void climb(InputAction.CallbackContext context)
+    {
+        playerRB.velocity = new Vector2(xInput * maxMoveSpeed, playerRB.velocity.y);
+        RaycastHit2D hitInfo = Physics2D.Raycast(transform.position, Vector2.right, distance, whatIsLadder);
+        if (hitInfo.collider != null)
+        {
+            if (context.performed)
+            {
+                isClimbing = true;
+            }
+        }
+        else
+        {
+            isClimbing = false;
+        }
+        if (isClimbing == true)
+        {
+            inputVertical = Input.GetAxisRaw("Vertical");
+            playerRB.velocity = new Vector2(playerRB.velocity.x, inputVertical * climbSpeed);
+            playerRB.gravityScale = 0;
+
+        }
+        else
+        {
+            playerRB.gravityScale = 5;
+        }
     }
 }
